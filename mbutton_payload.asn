@@ -1,0 +1,629 @@
+-- Swissphone m.Button protocol
+-- Version 0.1.0
+
+MBP DEFINITIONS AUTOMATIC TAGS ::=
+BEGIN
+
+  StateOptions ::= ENUMERATED
+  {
+    good    (0),
+    warning (1),  -- warning threshold reached
+    error   (2)   -- error threshold reached
+  }
+
+  TemperatureState ::= ENUMERATED
+  {
+    normal  (0),
+    low     (1), -- below lower threshold
+    high    (2)  -- over upper threshold
+  }
+
+  Orientation ::= ENUMERATED
+  {
+    unknown     (0),
+    faceUp      (1), -- Z+, buttons up
+    faceDown    (2), -- Z-, buttons down
+    headUp      (3), -- Y-, button2 above button1
+    headDown    (4), -- Y+, button1 above button2
+    onRightEdge (5), -- X+, button2 right of button1
+    onLeftEdge  (6)  -- X-, button2 left of button1
+  }
+
+  SystemState ::= SEQUENCE
+  {
+    resetOccurred     BOOLEAN,  -- device did reset since last message
+    signalError       BOOLEAN,
+    batteryState      StateOptions,
+    txDutyCycleState  StateOptions,
+    temperatureState  TemperatureState,
+    positioningActive BOOLEAN,
+    alertActive       BOOLEAN,
+    reedSignal        BOOLEAN,
+    inMotion          BOOLEAN,
+    orientation       Orientation,
+    testModeActive    BOOLEAN
+  }
+
+  Acceleration ::= SEQUENCE
+  {
+    accX          INTEGER(-16000..16000),  -- mg
+    accY          INTEGER(-16000..16000),  -- mg
+    accZ          INTEGER(-16000..16000),  -- mg
+    motionCounter INTEGER(0..65535)
+  }
+
+  EventList ::= SEQUENCE
+  {
+    button1ShortPress             BOOLEAN,
+    button1LongPress              BOOLEAN,
+    button2ShortPress             BOOLEAN,
+    button2LongPress              BOOLEAN,
+    reedChanged                   BOOLEAN,
+    reedCounterThresholdReached   BOOLEAN,
+    reedCounterOverflowed         BOOLEAN,
+    temperatureStateChanged       BOOLEAN,
+    batteryStateChanged           BOOLEAN,
+    motionChanged                 BOOLEAN,
+    doubleTapDetected             BOOLEAN,
+    orientationChanged            BOOLEAN,
+    manDownDetected               BOOLEAN,
+    fallDetected                  BOOLEAN,
+    motionCounterThresholdReached BOOLEAN,
+    motionCounterOverflowed       BOOLEAN
+  }
+
+  Beacon ::= SEQUENCE
+  {
+    major INTEGER (0..65535),
+    minor INTEGER (0..65535),
+    age   INTEGER (0..4095),  -- seconds
+    rssi  INTEGER (0..127)    -- -dBm
+  }
+
+  HardwareVersion ::= SEQUENCE
+  {
+    index    INTEGER(0..15), -- 0=A, 1=B etc.
+    subindex INTEGER(0..15)
+  }
+
+  Peripherals ::= SEQUENCE
+  {
+    outRfu   INTEGER(0..7), -- 3 bit reserved
+    speaker  BOOLEAN,
+    beeper   BOOLEAN,
+    vibrator BOOLEAN,
+    led2     BOOLEAN,
+    led1     BOOLEAN,
+    inRfu    INTEGER(0..7), -- 3 bit reserved
+    ble      BOOLEAN,
+    acc      BOOLEAN,
+    reed     BOOLEAN,
+    button2  BOOLEAN,
+    button1  BOOLEAN
+  }
+
+  Version ::= SEQUENCE
+  {
+    major INTEGER (0..15),
+    minor INTEGER (0..127),
+    patch INTEGER (0..127)
+  }
+
+  StatusLedSelection ::= ENUMERATED
+  {
+    none (0),
+    led1 (1),
+    led2 (2)
+  }
+
+  StatusConfig ::= SEQUENCE
+  {
+    period                   INTEGER(0..63),
+    periodIfActive           INTEGER(0..31),
+    batteryTempMeasurePeriod INTEGER(0..3),
+    statusLed                StatusLedSelection,
+    cradleDetection          BOOLEAN
+  }
+
+  UplinkPriority ::= ENUMERATED
+  {
+    normal (0),
+    high   (1)
+  }
+
+  UplinkMode ::= ENUMERATED
+  {
+    standard   (0),
+    lowLatency (1)
+  }
+
+  EventPayload ::= ENUMERATED
+  {
+    basic    (0),
+    extended (1)
+  }
+
+  BatteryErrorBehavior ::= SEQUENCE
+  {
+    sendUplink        BOOLEAN,
+    uplinkPriority    UplinkPriority,
+    uplinkMode        UplinkMode,
+    payload           EventPayload,
+    startPositioning  BOOLEAN,
+    clickNotification BOOLEAN,
+    ledNotification   BOOLEAN
+  }
+
+  BatteryConfig ::= SEQUENCE
+  {
+    warningThreshold INTEGER(0..7),
+    errorThreshold   INTEGER(0..7),
+    errorBehavior    BatteryErrorBehavior
+  }
+
+  ButtonEventTrigger ::= ENUMERATED
+  {
+    none       (0),
+    shortpress (1),
+    longpress  (2),
+    both       (3)
+  }
+
+  LedSelection ::= ENUMERATED
+  {
+    none (0),
+    led1 (1),
+    led2 (2),
+    both (3)
+  }
+
+  EventBehavior ::= SEQUENCE
+  {
+    sendUplink        BOOLEAN,
+    uplinkPriority    UplinkPriority,
+    uplinkMode        UplinkMode,
+    payload           EventPayload,
+    startPositioning  BOOLEAN,
+    eventPattern      INTEGER(0..15),
+    alertPattern      INTEGER(0..31),
+    alertColorTheme   INTEGER(0..15),
+    ackPattern        INTEGER(0..15),
+    vibrator          BOOLEAN,
+    beeper            BOOLEAN,
+    led               LedSelection
+  }
+
+  ButtonEventBehavior ::= SEQUENCE
+  {
+    buttonEventTrigger      ButtonEventTrigger,
+    keyVibration            BOOLEAN,
+    shortpressEventBehavior EventBehavior,
+    longpressEventBehavior  EventBehavior
+  }
+
+  ButtonConfig ::= SEQUENCE
+  {
+    longpressDuration    INTEGER(2..5),
+    button1EventBehavior ButtonEventBehavior,
+    button2EventBehavior ButtonEventBehavior
+  }
+
+  ReedEventTrigger ::= ENUMERATED
+  {
+    none    (0),
+    rising  (1),
+    falling (2),
+    both    (3)
+  }
+
+  ReedConfig ::= SEQUENCE
+  {
+    reedEventTrigger                    ReedEventTrigger,
+    dwellTime                           INTEGER(0..15),
+    reedEventBehavior                   EventBehavior,
+    reedCounterThreshold                INTEGER(0..65535),
+    reedCounterThresholdReachedBehavior EventBehavior
+  }
+
+  LedBrightness ::= ENUMERATED
+  {
+    low  (0),
+    high (1)
+  }
+
+  VibratorStrength ::= ENUMERATED
+  {
+    weak   (0),
+    medium (1),
+    strong (2)
+  }
+
+  BeeperVolume ::= ENUMERATED
+  {
+    quiet  (0),
+    medium (1),
+    loud   (2)
+  }
+
+  AlertConfig ::= SEQUENCE
+  {
+    ledSelection     LedSelection,
+    ledBrightness    LedBrightness,
+    vibratorStrength VibratorStrength,
+    beeperVolume     BeeperVolume,
+    duration         INTEGER(0..7)
+  }
+
+  PositioningMode ::= ENUMERATED
+  {
+    off             (0),
+    alwaysOn        (1),
+    onOutsideCradle (2),
+    onIfInMotion    (3)
+  }
+
+  PositioningConfig ::= SEQUENCE
+  {
+    mode     PositioningMode,
+    interval INTEGER(0..7),
+    timeout  INTEGER(0..3),
+    uuid     OCTET STRING (SIZE(16))
+  }
+
+  TemperatureConfig ::= SEQUENCE
+  {
+    lowerThreshold           INTEGER(-42..85),
+    upperThreshold           INTEGER(-42..85),
+    temperatureEventBehavior EventBehavior
+  }
+
+  MiotyConfig ::= SEQUENCE
+  {
+    adaptivePower            BOOLEAN,
+    txPowerLevel             INTEGER(0..3),
+    uplinkRepetition         INTEGER(0..3),
+    noAckNotificationPattern INTEGER(0..7),
+    otaaEnabled              BOOLEAN
+  }
+
+  MotionEventTrigger ::= ENUMERATED
+  {
+    none  (0),
+    start (1),
+    stop  (2),
+    both  (3)
+  }
+
+  MotionTriggerSettings ::= SEQUENCE
+  {
+    threshold INTEGER(0..3),
+    duration  INTEGER(0..3)
+  }
+
+  DoubleTapSettings ::= SEQUENCE
+  {
+    threshold INTEGER(0..3),
+    latency   INTEGER(0..1)
+  }
+
+  CarryOrientation ::= ENUMERATED
+  {
+    headUp      (0), -- Y-, button2 above button1
+    headDown    (1), -- Y+, button1 above button2
+    onRightEdge (2), -- X+, button2 right of button1
+    onLeftEdge  (3)  -- X-, button2 left of button1
+  }
+
+  ManDownDetectionSettings ::= SEQUENCE
+  {
+    silentPrealert            BOOLEAN,
+    prealertTime              INTEGER(0..120), -- seconds
+    carryOrientation          CarryOrientation,
+    activationAngle           INTEGER(0..7),
+    activationDelay           INTEGER(0..31),
+    prolongedImmobilityEnable BOOLEAN,
+    prolongedActivationDelay  INTEGER(0..63)
+  }
+
+  FallDetectionSettings ::= SEQUENCE
+  {
+    silentPrealert BOOLEAN,
+    prealertTime   INTEGER(0..120)
+  }
+
+  AccelerationConfig ::= SEQUENCE
+  {
+    motionTriggerEnable                   MotionEventTrigger,
+    motionTriggerSettings                 MotionTriggerSettings,
+    motionEventBehavior                   EventBehavior,
+    motionCounterThreshold                INTEGER(0..65535),
+    motionCounterThresholdReachedBehavior EventBehavior,
+    doubleTapTriggerEnable                BOOLEAN,
+    doubleTapSettings                     DoubleTapSettings,
+    doubleTapEventBehavior                EventBehavior,
+    tiltTriggerEnable                     BOOLEAN,
+    tiltDwellTime                         INTEGER(0..7),
+    tiltEventBehavior                     EventBehavior,
+    manDownDetectionEnable                BOOLEAN,
+    manDownDetectionSettings              ManDownDetectionSettings,
+    manDownDetectionEventBehavior         EventBehavior,
+    fallDetectionEnable                   BOOLEAN,
+    fallDetectionSettings                 FallDetectionSettings,
+    fallDetectionEventBehavior            EventBehavior
+  }
+
+  TestUplinkTrigger ::= SEQUENCE
+  {
+    button1 BOOLEAN,
+    button2 BOOLEAN,
+    reed    BOOLEAN
+  }
+
+  TestModeConfig ::= SEQUENCE
+  {
+    testUplinkTrigger       TestUplinkTrigger,
+    uplinkMode              UplinkMode,
+    disableDutyCycleLimiter BOOLEAN,
+    disableDownlink         BOOLEAN,
+    interval                INTEGER(0..15)
+  }
+
+  Configuration ::= SEQUENCE
+  {
+    configId         INTEGER(0..255),
+    status           StatusConfig,
+    battery          BatteryConfig,
+    button           ButtonConfig,
+    reed             ReedConfig,
+    alert            AlertConfig,
+    positioning      PositioningConfig,
+    temperature      TemperatureConfig,
+    mioty            MiotyConfig,
+    acceleration     AccelerationConfig,
+    ledBrightness    LedBrightness,
+    vibratorStrength VibratorStrength,
+    beeperVolume     BeeperVolume,
+    testMode         TestModeConfig
+  }
+
+  Status ::= SEQUENCE
+  {
+    systemState         SystemState,
+    requestRssiFeedback BOOLEAN,
+    statusMsgCounter    INTEGER(0..4095),
+    batteryPercent      INTEGER(0..100),
+    temperature         INTEGER(-42..85),
+    txDutyCycleMargin   INTEGER(0..100),
+    txPowerLevel        INTEGER(0..3)
+  }
+
+  ExtendedStatus ::= SEQUENCE
+  {
+    systemState         SystemState,
+    statusMsgCounter    INTEGER(0..4095),
+    eventMsgCounter     INTEGER(0..4095),
+    locationMsgCounter  INTEGER(0..4095),
+    batteryPercent      INTEGER(0..100),
+    batteryVoltage      INTEGER(0..255), -- 1600mV + val * 8.235mV
+    energyCounter       INTEGER(0..16777215), -- mWs
+    temperature         INTEGER(-42..85),
+    txDutyCycleMargin   INTEGER(0..100),
+    repetitionCounter   INTEGER(0..65535),
+    reedCounter         INTEGER(0..65535),
+    acceleration        Acceleration OPTIONAL
+  }
+
+  BasicEvent ::= SEQUENCE
+  {
+    event            EventList,
+    systemState      SystemState,
+    eventMsgCounter  INTEGER(0..4095),
+    batteryPercent   INTEGER(0..100),
+    temperature      INTEGER(-42..85)
+  }
+
+  ExtendedEvent ::= SEQUENCE
+  {
+    event            EventList,
+    systemState      SystemState,
+    eventMsgCounter  INTEGER(0..4095),
+    batteryPercent   INTEGER(0..100),
+    temperature      INTEGER(-42..85),
+    reedCounter      INTEGER(0..65535),
+    acceleration     Acceleration OPTIONAL
+  }
+
+  LocationUpdate ::= SEQUENCE
+  {
+    systemState        SystemState,
+    locationMsgCounter INTEGER(0..4095),
+    batteryPercent     INTEGER(0..100),
+    temperature        INTEGER(-42..85),
+    beacons            SEQUENCE (SIZE (0..3)) OF Beacon
+  }
+
+  ConfigurationInfo ::= SEQUENCE
+  {
+    systemState          SystemState,
+    batteryPercent       INTEGER(0..100),
+    temperature          INTEGER(-42..85),
+    hardwareVersion      HardwareVersion,
+    hardwareVariant      INTEGER(0..255),
+    peripherals          Peripherals,
+    firmwareVersion      Version,
+    serialNumber         OCTET STRING (SIZE(13)),
+    configCrc32          OCTET STRING (SIZE(4)),
+    config               Configuration
+  }
+
+  ConfigCrc ::= SEQUENCE
+  {
+    systemState          SystemState,
+    batteryPercent       INTEGER(0..100),
+    temperature          INTEGER(-42..85),
+    configId             INTEGER(0..255),
+    configCrc32          OCTET STRING (SIZE(4)),
+    configConsistency    StateOptions
+  }
+
+  UlMessage ::= CHOICE
+  {
+    status            Status,
+    extendedStatus    ExtendedStatus,
+    basicEvent        BasicEvent,
+    extendedEvent     ExtendedEvent,
+    locationUpdate    LocationUpdate,
+    configurationInfo ConfigurationInfo,
+    configCrc         ConfigCrc,
+    extension07       NULL,  -- reserve space for future use
+    extension08       NULL,
+    extension09       NULL,
+    extension10       NULL,
+    extension11       NULL,
+    extension12       NULL,
+    extension13       NULL,
+    extension14       NULL,
+    extension15       NULL,
+    extension16       NULL,
+    extension17       NULL,
+    extension18       NULL,
+    extension19       NULL,
+    extension20       NULL,
+    extension21       NULL,
+    extension22       NULL,
+    extension23       NULL,
+    extension24       NULL,
+    extension25       NULL,
+    extension26       NULL,
+    extension27       NULL,
+    extension28       NULL,
+    extension29       NULL,
+    extension30       NULL,
+    extension31       NULL
+  }
+
+  /* make first byte compatible with MPF field for blueprint compatibility */
+  UlMessageEnvelope ::= SEQUENCE
+  {
+    padding INTEGER(0..7),  -- has to be set to 7 for blueprint compatibility
+    payload UlMessage
+  }
+
+  SignalQuality ::= SEQUENCE
+  {
+    rssi  INTEGER(-300..-45), -- -150dBm .. -22.5dbm in 0.5dB steps
+    eqsnr INTEGER(-128..127)  -- -32dB .. +31.75dB in 0.25dB steps
+  }
+
+  ChangeMode ::= ENUMERATED
+  {
+    noChange          (0),
+    normal            (1),
+    hibernation       (2),
+    testModeTriggered (3),
+    testModePeriodic  (4),
+    extension05       (5),  -- reserve space for future use
+    extension06       (6),
+    extension07       (7),
+    extension08       (8),
+    extension09       (9),
+    extension10       (10),
+    extension11       (11),
+    extension12       (12),
+    extension13       (13),
+    reset             (14),
+    factoryReset      (15)
+  }
+
+  PositioningAction ::= ENUMERATED
+  {
+    none        (0),
+    start       (1),
+    startSingle (2),
+    stop        (3)
+  }
+
+  AlertAction ::= ENUMERATED
+  {
+    none         (0),
+    startEndless (1),
+    startSingle  (2),
+    stop         (3)
+  }
+
+  UplinkAction ::= ENUMERATED
+  {
+    none           (0),
+    status         (1),
+    extendedStatus (2),
+    configInfo     (3),
+    configCrc      (4)
+  }
+
+  ResetCounters ::= SEQUENCE
+  {
+    reed                BOOLEAN,
+    motion              BOOLEAN,
+    statusMsg           BOOLEAN,
+    eventMsg            BOOLEAN,
+    locationMsg         BOOLEAN,
+    repetition          BOOLEAN,
+    energyCounter       BOOLEAN,
+    energyCounterValue  INTEGER(0..16777215)
+  }
+
+  Control ::= SEQUENCE
+  {
+    changeMode              ChangeMode,
+    positioning             PositioningAction,
+    alert                   AlertAction,
+    alertPattern            INTEGER(0..31),
+    alertColorTheme         INTEGER(0..15),
+    triggerUplink           UplinkAction,
+    resetCounters           ResetCounters OPTIONAL
+  }
+
+  DlMessage ::= CHOICE
+  {
+    signalQuality SignalQuality,
+    control       Control,
+    configuration Configuration,
+    extension03   NULL,  -- reserve space for future use
+    extension04   NULL,
+    extension05   NULL,
+    extension06   NULL,
+    extension07   NULL,
+    extension08   NULL,
+    extension09   NULL,
+    extension10   NULL,
+    extension11   NULL,
+    extension12   NULL,
+    extension13   NULL,
+    extension14   NULL,
+    extension15   NULL,
+    extension16   NULL,
+    extension17   NULL,
+    extension18   NULL,
+    extension19   NULL,
+    extension20   NULL,
+    extension21   NULL,
+    extension22   NULL,
+    extension23   NULL,
+    extension24   NULL,
+    extension25   NULL,
+    extension26   NULL,
+    extension27   NULL,
+    extension28   NULL,
+    extension29   NULL,
+    extension30   NULL,
+    extension31   NULL
+  }
+
+  /* make first byte compatible with MPF field for blueprint compatibility */
+  DlMessageEnvelope ::= SEQUENCE
+  {
+    padding INTEGER(0..7),  -- has to be set to 7 for blueprint compatibility
+    payload DlMessage
+  }
+
+END
