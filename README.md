@@ -5,6 +5,6 @@ The mioty payload can be encoded and decoded using [ASN.1](https://en.wikipedia.
 
 
 ## Versions
-| m.BUTTON FW Version | Compatible Protocol Version | Type EUI |
-|----------|----------|----------|
-| 1.0.0    | 0.1.0    | `5C-33-5C-F9-6D-62-70-01` |
+| Protocol Version | Type EUI | Compatible m.BUTTON FW Version |
+|-|-|-|
+| 0.1.0    | `5C-33-5C-F9-6D-62-70-01` | >=1.0.0  |
